@@ -6,12 +6,16 @@
 
 library(RCurl) # load RCurl package
 
-# get sunspot series
-txt=getURL("http://sidc.oma.be/silso/DATA/yearssn.dat")
-# consider 1700-2012 years (remove 2013 * row that is provisory in 2014)
-series=strsplit(txt,"\n")[[1]][1:(2012-1700+1)]
-cat(series,sep="\n",file="sunspots.dat") # save to file
-series=read.table("sunspots.dat")[,2] # read from file
+# # get sunspot series
+# txt=getURL("http://sidc.oma.be/silso/DATA/yearssn.dat")
+# # consider 1700-2012 years (remove 2013 * row that is provisory in 2014)
+# series=strsplit(txt,"\n")[[1]][1:(2012-1700+1)]
+# cat(series,sep="\n",file="sunspots.dat") # save to file
+# series=read.table("sunspots.dat")[,2] # read from file
+series = read.table(file = "http://sidc.oma.be/silso/INFO/snytotcsv.php", 
+                    sep = ";")
+
+series = ts(series[, 2], start = series[1, 1])
 
 L=length(series) # series length
 forecasts=32 # number of 1-ahead forecasts 
@@ -102,3 +106,21 @@ lines(f1,lty=2,type="b",pch=3,cex=0.5)
 lines(f2,lty=3,type="b",pch=5,cex=0.5)
 legend("topright",c("sunspots",text1,text2),lty=1:3,pch=c(1,3,5))
 dev.off()
+
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+f3 <- f2
+f3[f3 < 0] <- 0
+e3=maeres(outsamples-f3)
+
+df <- data.frame(x = 1:length(outsamples), 
+                 actual = outsamples, 
+                 arima = f1, 
+                 gp = f2, 
+                 gp_adj = f3)
+df %>% 
+  melt(id.vars = "x") %>% 
+  ggplot(aes(x = x, y = value, color = variable)) + 
+  geom_line() + 
+  theme_bw()
