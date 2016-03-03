@@ -47,7 +47,7 @@ text1=paste("arima (MAE=",round(e1,digits=1),")",sep="")
 
 # fit genetic programming arithmetic model:
 library(rgp) # load rgp
-ST=inputVariableSet("x1","x2") # same order of AR arima component
+ST=inputVariableSet("x1","x2", "x3") # same order of AR arima component
 cF1=constantFactorySet(function() rnorm(1)) # mean=0, sd=1
 FS=functionSet("+","*","-","/") # arithmetic
 
@@ -66,7 +66,7 @@ gpts=function(f,h=0)
   else I=INIT:LTS # fit to in-samples 
   for(i in I)
     { 
-     F[i]=f(TS[i-1],TS[i-2])
+     F[i]=f(TS[i-1],TS[i-2], sin(TS[i-1]))
      if(is.nan(F[i])) F[i]=0 # deal with NaN
      E[i]=TS[i]-F[i]
     }
@@ -112,7 +112,7 @@ library(reshape2)
 library(dplyr)
 f3 <- f2
 f3[f3 < 0] <- 0
-e3=maeres(outsamples-f3)
+e3=maeres(outsamples-f3); cat("gp out-of-sample MAE=", e3, "\n")
 
 df <- data.frame(x = 1:length(outsamples), 
                  actual = outsamples, 
